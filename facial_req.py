@@ -9,6 +9,9 @@ import pickle
 import time
 import cv2
 
+import tcp_client
+import datetime
+
 #Initialize 'currentname' to trigger only when a new person is identified.
 currentname = "unknown"
 #Determine faces from encodings.pickle file model created from train_model.py
@@ -29,6 +32,11 @@ time.sleep(2.0)
 
 # start the FPS counter
 fps = FPS().start()
+
+# save start minute
+current_minute = datetime.datetime.now().minute
+old_minute = -1
+
 
 # loop over frames from the video file stream
 while True:
@@ -70,11 +78,15 @@ while True:
 			name = max(counts, key=counts.get)
 
 			#If someone in your dataset is identified, print their name on the screen
-			if currentname != name:
-				currentname = name
-				print(currentname)
+			#or it's been a minute since the last detection.			
+			current_minute = datetime.datetime.now().minute	
+			
+			if currentname != name or current_minute!=old_minute:
+				old_minute = current_minute								
 				
-				# rellenar aquí
+				currentname = name
+				print("sending username to microcontroller -> " + currentname)
+ 				send_new_user_message_to_mc(name) #from tcp_client
 
 		# update the list of names
 		names.append(name)
